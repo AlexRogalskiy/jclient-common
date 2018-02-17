@@ -3,6 +3,7 @@ package ru.hh.jclient.common;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.ListenableFuture;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import static java.util.Collections.singleton;
@@ -24,6 +25,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.invocation.InvocationOnMock;
 import ru.hh.jclient.common.HttpClientImpl.CompletionHandler;
+
+import static ru.hh.jclient.common.TestRequestDebug.Call.CLIENT_PROBLEM;
 import static ru.hh.jclient.common.TestRequestDebug.Call.FINISHED;
 import static ru.hh.jclient.common.TestRequestDebug.Call.REQUEST;
 import static ru.hh.jclient.common.TestRequestDebug.Call.RESPONSE;
@@ -32,11 +35,13 @@ import static ru.hh.jclient.common.TestRequestDebug.Call.RETRY;
 import ru.hh.jclient.common.balancing.BalancingUpstreamManager;
 import ru.hh.jclient.common.util.storage.SingletonStorage;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -79,6 +84,26 @@ public class HttpClientBalancedTest extends HttpClientTestBase {
     assertHostEquals(request[0], "server");
 
     debug.assertCalled(REQUEST, RESPONSE, RESPONSE_CONVERTED, FINISHED);
+  }
+
+  @Test
+  public void requestClosed() throws Exception {
+    createHttpClientBuilder("| server=http://server1 | server=http://server2");
+
+    when(httpClient.executeRequest(isA(Request.class), isA(CompletionHandler.class)))
+      .then(iom -> {
+        IOException e = new IOException("Closed");
+        iom.getArgumentAt(1, CompletionHandler.class).onThrowable(e);
+        return new ListenableFuture.CompletedFailure<>(e);
+      })
+      .then(iom -> {
+        completeWith(200, iom);
+        return null;
+      });
+
+    getTestClient(adaptive).get();
+
+    debug.assertCalled(REQUEST, CLIENT_PROBLEM, FINISHED, RETRY, RESPONSE, RESPONSE_CONVERTED, FINISHED);
   }
 
   @Test
@@ -321,9 +346,9 @@ public class HttpClientBalancedTest extends HttpClientTestBase {
       this.adaptive = adaptive;
     }
 
-    void get() throws Exception {
+    String get() throws Exception {
       ru.hh.jclient.common.Request request = get(url("/get")).build();
-      (adaptive ? http.withAdaptive(request) : http.with(request)).expectPlainText().result().get();
+      return (adaptive ? http.withAdaptive(request) : http.with(request)).expectPlainText().result().get();
     }
 
     void post() throws Exception {

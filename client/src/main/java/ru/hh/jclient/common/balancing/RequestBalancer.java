@@ -14,11 +14,14 @@ import static ru.hh.jclient.common.balancing.AdaptiveBalancingStrategy.WARM_UP_D
 import ru.hh.jclient.common.ResponseWrapper;
 import ru.hh.jclient.common.UpstreamManager;
 import ru.hh.jclient.common.Uri;
+
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class RequestBalancer {
   private final String host;
@@ -55,6 +58,16 @@ public class RequestBalancer {
     triesLeft = upstream != null ? upstream.getConfig().getMaxTries() : UpstreamConfig.DEFAULT_MAX_TRIES;
   }
 
+  public static class ResponseWithException {
+    public ResponseWrapper wrapper;
+    public Throwable throwable;
+
+    ResponseWithException(ResponseWrapper wrapper, Throwable throwable) {
+      this.throwable = throwable;
+      this.wrapper = wrapper;
+    }
+  }
+
   public CompletableFuture<Response> requestWithRetry() {
     Request balancedRequest = request;
     if (isUpstreamAvailable()) {
@@ -66,16 +79,20 @@ public class RequestBalancer {
     int retryCount = triedServers.size();
     return requestExecutor.executeRequest(balancedRequest, retryCount, isUpstreamAvailable() ? upstream.getName() : host)
         .whenComplete((wrapper, throwable) -> finishRequest(wrapper))
+        .handle(ResponseWithException::new)
         .thenCompose(this::unwrapOrRetry);
   }
 
-  private CompletableFuture<Response> unwrapOrRetry(ResponseWrapper wrapper) {
-    boolean doRetry = checkRetry(wrapper.getResponse());
-    countStatistics(wrapper, doRetry);
-    Response response = wrapper.getResponse();
+  private CompletableFuture<Response> unwrapOrRetry(ResponseWithException rwe) {
+    ResponseWrapper wrapper = rwe.wrapper;
+    boolean doRetry = (rwe.throwable != null && rwe.throwable.getCause() instanceof IOException) || checkRetry(wrapper.getResponse());
+    int statusCode = wrapper == null ? 599 : wrapper.getResponse().getStatusCode();
+
+    countStatistics(wrapper, statusCode, doRetry);
+
     if (doRetry) {
       if (triedServers.isEmpty()) {
-        firstStatusCode = response.getStatusCode();
+        firstStatusCode = statusCode;
       }
       if (isServerAvailable()) {
         triedServers.add(currentServer.getIndex());
@@ -83,16 +100,20 @@ public class RequestBalancer {
       }
       return requestWithRetry();
     }
-    return completedFuture(response);
+
+    if (rwe.throwable != null) {
+      throw new CompletionException(rwe.throwable.getMessage(), rwe.throwable);
+    }
+
+    return completedFuture(wrapper.getResponse());
   }
 
-  private void countStatistics(ResponseWrapper wrapper, boolean doRetry) {
+  private void countStatistics(ResponseWrapper wrapper, int statusCode, boolean doRetry) {
     if (isServerAvailable()) {
       Monitoring monitoring = upstreamManager.getMonitoring();
-      int statusCode = wrapper.getResponse().getStatusCode();
       monitoring.countRequest(upstream.getName(), currentServer.getAddress(), statusCode, !doRetry);
 
-      long requestTimeMs = wrapper.getTimeToLastByteMs();
+      long requestTimeMs = wrapper == null ? 0 : wrapper.getTimeToLastByteMs();
       monitoring.countRequestTime(upstream.getName(), requestTimeMs);
 
       if (!triedServers.isEmpty()) {
