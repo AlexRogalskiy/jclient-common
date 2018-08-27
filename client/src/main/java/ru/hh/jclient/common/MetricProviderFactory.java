@@ -44,7 +44,7 @@ public final class MetricProviderFactory {
   }
 
   private static Optional<ByteBufAllocatorMetric> getByteBufferMetrics(AsyncHttpClient asyncHttpClient) {
-    ByteBufAllocator allocator = asyncHttpClient.getConfig().getAllocator();
+    ByteBufAllocator allocator = Optional.ofNullable(asyncHttpClient.getConfig().getAllocator()).orElse(ByteBufAllocator.DEFAULT);
     if (allocator instanceof ByteBufAllocatorMetricProvider) {
       ByteBufAllocatorMetricProvider metricProvider = (ByteBufAllocatorMetricProvider) allocator;
       return Optional.ofNullable(metricProvider.metric());
