@@ -1,32 +1,20 @@
 package ru.hh.jclient.common.util;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
-import java.io.IOException;
 import java.io.ObjectStreamClass;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClassesCache {
-  private static final LoadingCache<String, Class<?>> CLASS_CACHE = CacheBuilder
-          .newBuilder()
-          .concurrencyLevel(Runtime.getRuntime().availableProcessors())
-          .build(new CacheLoader<String, Class<?>>() {
-            @Override
-            public Class<?> load(String input) throws RuntimeException {
-              try {
-                return Class.forName(input);
-              } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-              }
-            }
-          });
+  private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>();
 
-  public static Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+  public static Class<?> resolveClass(ObjectStreamClass desc) {
+      return CLASS_CACHE.computeIfAbsent(desc.getName(), ClassesCache::loadClass);
+  }
+
+  private synchronized static Class<?> loadClass(String className) {
     try {
-      return CLASS_CACHE.get(desc.getName());
-    } catch (ExecutionException e) {
+      return Class.forName(className);
+    } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
   }

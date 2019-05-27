@@ -32,9 +32,9 @@ public class ResultWithStatus<T> {
   }
 
   /**
-   * @return true if response status code is within {@link HttpClient#OK_RANGE}
+   * @return true if response status code complies with {@link HttpClient#OK_STATUS}
    */
   public boolean isSuccess() {
-    return HttpClient.OK_RANGE.contains(statusCode);
+    return HttpClient.OK_STATUS.test(statusCode);
   }
 }

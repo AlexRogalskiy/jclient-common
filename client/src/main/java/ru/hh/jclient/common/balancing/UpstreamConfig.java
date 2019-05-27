@@ -1,9 +1,9 @@
 package ru.hh.jclient.common.balancing;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static org.asynchttpclient.util.MiscUtils.isEmpty;
 
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +52,7 @@ final class UpstreamConfig {
       }
 
       for (int i = 1; i < configs.length; i++) {
-        if (!isNullOrEmpty(configs[i].trim())) {
+        if (!isEmpty(configs[i].trim())) {
           upstreamConfig.addServer(parseServerConfig(configs[i]));
         }
       }

@@ -1,6 +1,6 @@
 package ru.hh.jclient.common.responseconverter;
 
-import com.google.common.net.MediaType;
+import javax.ws.rs.core.MediaType;
 import ru.hh.jclient.common.util.ClassesCache;
 import ru.hh.jclient.common.Response;
 import ru.hh.jclient.common.ResultWithResponse;
@@ -14,10 +14,8 @@ import java.io.ObjectStreamClass;
 import java.util.Collection;
 import java.util.Set;
 
-import static com.google.common.collect.ImmutableSet.of;
-
 public class JavaSerializedConverter<T> extends SingleTypeConverter<T> {
-  private static final Set<MediaType> MEDIA_TYPES = of(MediaType.parse("application/x-java-serialized-object"));
+  private static final Set<MediaType> MEDIA_TYPES = Set.of(MediaType.valueOf("application/x-java-serialized-object"));
 
   private final Class<T> clazz;
   private boolean isRootClassResolved;

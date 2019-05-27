@@ -3,7 +3,6 @@ package ru.hh.jclient.common;
 import static java.util.Objects.requireNonNull;
 import static ru.hh.jclient.common.HttpHeaderNames.X_HH_DEBUG;
 import static ru.hh.jclient.common.HttpHeaderNames.X_REQUEST_ID;
-import com.google.common.base.Joiner;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,7 +74,7 @@ public class RequestUtils {
   private static Optional<String> getWhenExists(Map<String, List<String>> headers, String headerName, boolean warnIfMultiple) {
     List<String> values = headers.get(headerName);
     if (values.size() > 1 && warnIfMultiple) {
-      log.warn("Unexpected multiple values for header {}: {}", headerName, Joiner.on(',').useForNull("null").join(values));
+      log.warn("Unexpected multiple values for header {}: {}", headerName, String.join(",", values));
     }
     return Optional.ofNullable(values.get(0));
 

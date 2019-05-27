@@ -1,11 +1,10 @@
 package ru.hh.jclient.common;
 
-import static com.google.common.net.HttpHeaders.AUTHORIZATION;
-import static com.google.common.net.MediaType.ANY_VIDEO_TYPE;
-import static com.google.common.net.MediaType.JSON_UTF_8;
-import static com.google.common.net.MediaType.PLAIN_TEXT_UTF_8;
-import static com.google.common.net.MediaType.PROTOBUF;
-import static com.google.common.net.MediaType.XML_UTF_8;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static ru.hh.jclient.common.util.MediaTypes.JSON_UTF_8;
+import static ru.hh.jclient.common.util.MediaTypes.PLAIN_TEXT_UTF_8;
+import static ru.hh.jclient.common.util.MediaTypes.PROTOBUF;
+import static ru.hh.jclient.common.util.MediaTypes.XML_UTF_8;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -40,11 +39,15 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.RuntimeDelegate;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.asynchttpclient.AsyncHttpClient;
+import org.glassfish.jersey.internal.RuntimeDelegateImpl;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import ru.hh.jclient.common.HttpClientImpl.CompletionHandler;
@@ -59,14 +62,22 @@ import ru.hh.jclient.common.model.XmlError;
 import ru.hh.jclient.common.model.XmlTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
+import ru.hh.jclient.common.util.MediaTypes;
 
 public class HttpClientTest extends HttpClientTestBase {
+  
+  private static final MediaType ANY_VIDEO_TYPE = new MediaType("video", "/*");
 
   private ObjectMapper objectMapper = new ObjectMapper();
   private JAXBContext jaxbContext;
 
   public HttpClientTest() throws JAXBException {
     jaxbContext = JAXBContext.newInstance(XmlTest.class, XmlError.class);
+  }
+  
+  @BeforeClass
+  public static void setJAXRSRuntimeDelegate() {
+    RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
   }
 
   @Before
@@ -88,7 +99,8 @@ public class HttpClientTest extends HttpClientTestBase {
   @Test
   public void testPlainCp1251() throws InterruptedException, ExecutionException {
     Charset charset = Charset.forName("Cp1251");
-    Supplier<Request> actualRequest = withEmptyContext().okRequest("test тест".getBytes(charset), PLAIN_TEXT_UTF_8.withCharset(charset));
+    Supplier<Request> actualRequest = withEmptyContext().okRequest("test тест".getBytes(charset),
+        MediaTypes.addCharset(MediaType.TEXT_PLAIN_TYPE, charset.name()));
 
     Request request = new RequestBuilder("GET").setUrl("http://localhost/plain").build();
     String text = http.with(request).expectPlainText(charset).result().get();

@@ -1,6 +1,5 @@
 package ru.hh.jclient.common;
 
-import static com.google.common.net.HttpHeaders.ACCEPT;
 import static java.util.Collections.singleton;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -24,13 +23,14 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.HttpHeaders;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.AsyncHttpClientConfig;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import ru.hh.jclient.common.HttpClientImpl.CompletionHandler;
+import ru.hh.jclient.common.util.MediaTypes;
 import ru.hh.jclient.common.util.storage.SingletonStorage;
-import com.google.common.net.HttpHeaders;
-import com.google.common.net.MediaType;
 
 public class HttpClientTestBase {
 
@@ -59,7 +59,7 @@ public class HttpClientTestBase {
   }
 
   public Supplier<Request> request(String text, MediaType contentType, int status) {
-    final Charset charset = contentType.charset().isPresent() ? contentType.charset().get() : Charset.defaultCharset();
+    final Charset charset = MediaTypes.getCharset(contentType).map(Charset::forName).orElseGet(Charset::defaultCharset);
     return request(text.getBytes(charset), contentType, status);
   }
 
@@ -109,19 +109,19 @@ public class HttpClientTestBase {
     assertEquals(request1.getUrl(), request2.getUrl());
     assertEquals(request1.getMethod(), request2.getMethod());
     ru.hh.jclient.common.HttpHeaders headers2 = request2.getHeaders();
-    headers2.remove(ACCEPT);
+    headers2.remove(HttpHeaders.ACCEPT);
     assertEquals(request1.getHeaders(), headers2);
   }
 
   public void assertProperAcceptHeader(ResultProcessor<?> resultProcessor, Request actualRequest) {
     if (!resultProcessor.getConverter().getSupportedMediaTypes().isPresent()) {
-      assertFalse(actualRequest.getHeaders().contains(ACCEPT));
+      assertFalse(actualRequest.getHeaders().contains(HttpHeaders.ACCEPT));
       return;
     }
 
     Collection<MediaType> mediaTypes = resultProcessor.getConverter().getSupportedMediaTypes().get();
-    assertEquals(1, actualRequest.getHeaders().getAll(ACCEPT).size());
-    List<String> acceptTypes = Arrays.asList(actualRequest.getHeaders().get(ACCEPT).split(","));
+    assertEquals(1, actualRequest.getHeaders().getAll(HttpHeaders.ACCEPT).size());
+    List<String> acceptTypes = Arrays.asList(actualRequest.getHeaders().get(HttpHeaders.ACCEPT).split(","));
     mediaTypes.forEach(type -> assertTrue(acceptTypes.contains(type.toString())));
   }
 

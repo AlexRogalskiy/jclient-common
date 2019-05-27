@@ -9,10 +9,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import io.netty.channel.ConnectTimeoutException;
+import javax.ws.rs.ext.RuntimeDelegate;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
+import org.glassfish.jersey.internal.RuntimeDelegateImpl;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -40,12 +43,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-abstract class BalancingClientTestBase extends HttpClientTestBase {
+public abstract class BalancingClientTestBase extends HttpClientTestBase {
 
   static final String TEST_UPSTREAM = "backend";
   AsyncHttpClient httpClient;
   UpstreamManager upstreamManager;
 
+  @BeforeClass
+  public static void setJAXRSRuntimeDelegate() {
+    RuntimeDelegate.setInstance(new RuntimeDelegateImpl());
+  }
+  
   @Before
   public void setUpTest() {
     withEmptyContext();

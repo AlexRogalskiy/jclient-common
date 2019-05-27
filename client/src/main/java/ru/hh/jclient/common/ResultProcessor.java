@@ -41,7 +41,7 @@ public class ResultProcessor<T> {
    * Returns future containing expected result or {@link ClientResponseException}.
    *
    * @return expected result
-   * @throws ClientResponseException if status code is not in {@link HttpClient#OK_RANGE}
+   * @throws ClientResponseException if status code does NOT comply with {@link HttpClient#OK_STATUS}
    * @throws ResponseConverterException if converter failed to process response
    */
   public CompletableFuture<T> result() {
@@ -49,7 +49,7 @@ public class ResultProcessor<T> {
   }
 
   /**
-   * Returns future containing wrapper with response object and result (empty if status code is not in {@link HttpClient#OK_RANGE}).
+   * Returns future containing wrapper with response object and result (empty if status code does NOT comply with {@link HttpClient#OK_STATUS}).
    *
    * @return {@link ResultWithResponse} with expected result (possibly empty) and response object
    * @throws ResponseConverterException if converter failed to process response
@@ -59,7 +59,7 @@ public class ResultProcessor<T> {
   }
 
   /**
-   * Returns future containing wrapper with response status code and result (empty if status code is not in {@link HttpClient#OK_RANGE}).
+   * Returns future containing wrapper with response status code and result (empty if status code does NOT comply with {@link HttpClient#OK_STATUS})
    *
    * @return {@link ResultWithStatus} with expected result (possibly empty) and response status code
    * @throws ResponseConverterException if converter failed to process response
@@ -70,7 +70,7 @@ public class ResultProcessor<T> {
 
   private ResultWithResponse<T> wrapOrThrow(Response response) {
     try {
-      if (HttpClient.OK_RESPONSE.apply(response)) {
+      if (HttpClient.OK_STATUS.test(response.getStatusCode())) {
         return wrap(response);
       }
       throw new ClientResponseException(response);
@@ -82,7 +82,7 @@ public class ResultProcessor<T> {
 
   private ResultWithResponse<T> wrapOrNull(Response response) {
     try {
-      if (HttpClient.OK_RESPONSE.apply(response)) {
+      if (HttpClient.OK_STATUS.test(response.getStatusCode())) {
         return wrap(response);
       }
       return new ResultWithResponse<>(null, response);

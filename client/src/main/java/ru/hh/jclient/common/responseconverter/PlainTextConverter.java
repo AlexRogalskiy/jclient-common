@@ -4,11 +4,12 @@ import static java.util.Objects.requireNonNull;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Set;
+import javax.ws.rs.core.MediaType;
 import ru.hh.jclient.common.Response;
 import ru.hh.jclient.common.ResultWithResponse;
+import ru.hh.jclient.common.util.MediaTypes;
 import ru.hh.jclient.common.util.MoreFunctionalInterfaces.FailableFunction;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.net.MediaType;
 
 public class PlainTextConverter extends SingleTypeConverter<String> {
 
@@ -34,6 +35,6 @@ public class PlainTextConverter extends SingleTypeConverter<String> {
 
   @Override
   protected Collection<MediaType> getMediaTypes() {
-    return ImmutableSet.of(MediaType.PLAIN_TEXT_UTF_8.withoutParameters().withCharset(charset));
+    return Set.of(MediaTypes.addCharset(MediaType.TEXT_PLAIN_TYPE, this.charset.name()));
   }
 }

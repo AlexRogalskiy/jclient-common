@@ -2,7 +2,7 @@ package ru.hh.jclient.common.exception;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
-import com.google.common.net.MediaType;
+import javax.ws.rs.core.MediaType;
 import ru.hh.jclient.common.Response;
 
 public class UnexpectedContentTypeException extends ClientResponseException {

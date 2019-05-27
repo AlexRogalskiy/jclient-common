@@ -1,12 +1,10 @@
 package ru.hh.jclient.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Range;
-import com.google.common.net.MediaType;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.MessageLite;
-import static java.util.Objects.requireNonNull;
 
+import javax.ws.rs.core.MediaType;
 import org.asynchttpclient.AsyncHttpClient;
 import ru.hh.jclient.common.balancing.RequestBalancer;
 import ru.hh.jclient.common.balancing.RequestBalancer.RequestExecutor;
@@ -33,11 +31,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class HttpClient {
-  public static final Range<Integer> OK_RANGE = Range.atMost(399);
-  public static final Function<Response, Boolean> OK_RESPONSE = r -> OK_RANGE.contains(r.getStatusCode());
+  // awkward backward compatibility for treating redirect as a successful response
+  public static final Predicate<Integer> OK_STATUS = code -> code >= 200 && code < 400;
 
   private final AsyncHttpClient http;
   private final Set<String> hostsWithSession;

@@ -1,11 +1,9 @@
 package ru.hh.jclient.common.responseconverter;
 
-import static com.google.common.collect.ImmutableSet.of;
-import static com.google.common.net.MediaType.APPLICATION_XML_UTF_8;
-import static com.google.common.net.MediaType.XML_UTF_8;
 import static java.util.Objects.requireNonNull;
 import java.util.Collection;
 import java.util.Set;
+import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.stream.XMLInputFactory;
@@ -15,11 +13,10 @@ import javax.xml.transform.stream.StreamSource;
 import ru.hh.jclient.common.Response;
 import ru.hh.jclient.common.ResultWithResponse;
 import ru.hh.jclient.common.util.MoreFunctionalInterfaces.FailableFunction;
-import com.google.common.net.MediaType;
 
 public class XmlConverter<T> extends SingleTypeConverter<T> {
 
-  private static final Set<MediaType> MEDIA_TYPES = of(XML_UTF_8.withoutParameters(), APPLICATION_XML_UTF_8.withoutParameters());
+  private static final Set<MediaType> MEDIA_TYPES = Set.of(MediaType.TEXT_XML_TYPE, MediaType.APPLICATION_XML_TYPE);
   private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
   private JAXBContext context;

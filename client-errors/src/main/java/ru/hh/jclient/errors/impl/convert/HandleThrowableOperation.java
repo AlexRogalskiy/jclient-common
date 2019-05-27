@@ -6,7 +6,6 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.ws.rs.WebApplicationException;
-import com.google.common.base.Throwables;
 import ru.hh.jclient.errors.impl.OperationBase;
 
 /**
@@ -30,7 +29,7 @@ public class HandleThrowableOperation<T> extends OperationBase<HandleThrowableOp
    * </p>
    * <p>
    * If source exception is wrapped in {@link CompletionException} it will be unwrapped. If source exception is instance of WAE it will not be
-   * converted. Unmatched exception will be re-thrown using {@link Throwables#propagate(Throwable)}.
+   * converted. Unmatched exception will be re-thrown wrapped in {@link RuntimeException}.
    * </p>
    * <p>
    * If there is no exception, return result as-is.
@@ -60,7 +59,7 @@ public class HandleThrowableOperation<T> extends OperationBase<HandleThrowableOp
       throw toException("was " + converted.getClass().getName() + ": " + converted.getMessage());
     }
 
-    throw Throwables.propagate(throwable);
+    throw throwable instanceof RuntimeException ? (RuntimeException) throwable : new RuntimeException(throwable);
   }
 
   /**

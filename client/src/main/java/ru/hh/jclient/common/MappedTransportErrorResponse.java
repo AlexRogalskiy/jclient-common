@@ -1,5 +1,6 @@
 package ru.hh.jclient.common;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.SocketAddress;
@@ -8,12 +9,12 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.cookie.Cookie;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
+import ru.hh.jclient.common.util.MediaTypes;
 
 /**
  * This implementation of Response is returned in case when transport exception is mapped to status code. It is supposed to emulate intbal error
@@ -25,12 +26,12 @@ public class MappedTransportErrorResponse implements Response {
   private final String statusText;
   private final Uri uri;
 
-  private static final String CONTENT_TYPE = MediaType.PLAIN_TEXT_UTF_8.withoutParameters().toString();
+  private static final String CONTENT_TYPE = MediaTypes.PLAIN_TEXT_UTF_8.toString();
 
   private static final HttpHeaders HEADERS = new DefaultHttpHeaders();
 
   static {
-    HEADERS.add("Content-Type", CONTENT_TYPE);
+    HEADERS.add(HttpHeaderNames.CONTENT_TYPE, CONTENT_TYPE);
   }
 
   public MappedTransportErrorResponse(int statusCode, String statusText, ru.hh.jclient.common.Uri uri) {
