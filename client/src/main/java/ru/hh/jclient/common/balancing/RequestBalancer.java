@@ -96,12 +96,12 @@ public class RequestBalancer {
   }
 
   private void countStatistics(ResponseWrapper wrapper, boolean doRetry) {
-    if (isServerAvailable()) {
-      Set<Monitoring> monitoringSet = upstreamManager.getMonitoring();
-      for (Monitoring monitoring : monitoringSet) {
-        int statusCode = wrapper.getResponse().getStatusCode();
-        long requestTimeMs = wrapper.getTimeToLastByteMs();
+    Set<Monitoring> monitoringSet = upstreamManager.getMonitoring();
+    for (Monitoring monitoring : monitoringSet) {
+      int statusCode = wrapper.getResponse().getStatusCode();
+      long requestTimeMs = wrapper.getTimeToLastByteMs();
 
+      if (isServerAvailable()) {
         monitoring.countRequest(upstream.getName(), currentServer.getDatacenter(), currentServer.getAddress(), statusCode, requestTimeMs, !doRetry);
         monitoring.countRequestTime(upstream.getName(), currentServer.getDatacenter(), requestTimeMs);
 
@@ -109,6 +109,11 @@ public class RequestBalancer {
           monitoring.countRetry(upstream.getName(), currentServer.getDatacenter(), currentServer.getAddress(),
             statusCode, firstStatusCode, triedServers.size());
         }
+      } else {
+        Uri uri = new Uri(request.getUri().getScheme(), null, request.getUri().getHost(), request.getUri().getPort(), null, null);
+        String unbalancedHost = uri.toString();
+        monitoring.countRequest(unbalancedHost, null, unbalancedHost, statusCode, requestTimeMs, !doRetry);
+        monitoring.countRequestTime(unbalancedHost, null, requestTimeMs);
       }
     }
   }
