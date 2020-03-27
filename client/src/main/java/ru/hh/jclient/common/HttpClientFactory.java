@@ -13,7 +13,7 @@ import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 
-public class HttpClientFactory<R extends RequestEngineBuilder<R>> {
+public class HttpClientFactory<R extends RequestEngineBuilder<?>> {
 
   private final AsyncHttpClient http;
   private final Set<String> hostsWithSession;

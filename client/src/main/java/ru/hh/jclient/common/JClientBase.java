@@ -8,7 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
-public abstract class JClientBase<R extends RequestEngineBuilder<R>> {
+public abstract class JClientBase {
 
   public static final String HTTP_GET = "GET";
   public static final String HTTP_POST = "POST";
@@ -16,14 +16,14 @@ public abstract class JClientBase<R extends RequestEngineBuilder<R>> {
   public static final String HTTP_DELETE = "DELETE";
 
   protected String host;
-  protected HttpClientFactory<R> http;
+  protected HttpClientFactory<?> http;
 
-  protected JClientBase(String host, HttpClientFactory<R> http) {
+  protected JClientBase(String host, HttpClientFactory<?> http) {
     this.host = requireNotEmpty(host, "host");
     this.http = requireNotNull(http, "http");
   }
 
-  protected JClientBase(String host, String path, HttpClientFactory<R> http) {
+  protected JClientBase(String host, String path, HttpClientFactory<?> http) {
     this(requireNotEmpty(host, "host") + ofNullable(path).orElse(""), http);
   }
 

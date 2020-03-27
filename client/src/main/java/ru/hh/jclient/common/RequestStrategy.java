@@ -3,13 +3,13 @@ package ru.hh.jclient.common;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
-public interface RequestStrategy<REB extends RequestEngineBuilder<REB>> {
+public interface RequestStrategy<R extends RequestEngineBuilder<?>> {
 
   @FunctionalInterface
   interface RequestExecutor {
     CompletableFuture<ResponseWrapper> executeRequest(Request request, int retryCount, RequestContext context);
   }
-  REB createRequestEngineBuilder(HttpClient<REB> client);
+  R createRequestEngineBuilder(HttpClient<R> client);
   void setTimeoutMultiplier(double timeoutMultiplier);
-  RequestStrategy<REB> createCustomizedCopy(UnaryOperator<REB> configAction);
+  RequestStrategy<R> createCustomizedCopy(UnaryOperator<R> configAction);
 }

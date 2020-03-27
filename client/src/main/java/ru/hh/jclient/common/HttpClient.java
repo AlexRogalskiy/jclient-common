@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public abstract class HttpClient<R extends RequestEngineBuilder<R>> {
+public abstract class HttpClient<R extends RequestEngineBuilder<?>> {
   public static final Range<Integer> OK_RANGE = Range.atMost(399);
   public static final Function<Response, Boolean> OK_RESPONSE = r -> OK_RANGE.contains(r.getStatusCode());
 

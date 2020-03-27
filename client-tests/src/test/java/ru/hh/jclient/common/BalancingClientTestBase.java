@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import ru.hh.jclient.common.HttpClientImpl.CompletionHandler;
+import ru.hh.jclient.common.balancing.BalancingJClientBase;
 import ru.hh.jclient.common.balancing.BalancingRequestStrategy;
 import ru.hh.jclient.common.balancing.BalancingUpstreamManager;
 import ru.hh.jclient.common.balancing.RequestBalancerBuilder;
@@ -364,7 +365,7 @@ abstract class BalancingClientTestBase extends HttpClientTestBase<RequestBalance
     return new TestClient(getHttp(), isAdaptive());
   }
 
-  static class TestClient extends ConfigurableJClientBase<RequestBalancerBuilder, TestClient> {
+  static class TestClient extends BalancingJClientBase<TestClient> {
     private final boolean adaptive;
 
     TestClient(HttpClientFactory<RequestBalancerBuilder> http, boolean adaptive) {

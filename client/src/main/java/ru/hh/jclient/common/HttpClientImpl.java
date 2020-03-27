@@ -34,7 +34,7 @@ import ru.hh.jclient.common.util.storage.StorageUtils.Transfers;
 import ru.hh.jclient.common.util.storage.Storage;
 import static java.time.Instant.now;
 
-class HttpClientImpl<R extends RequestEngineBuilder<R>> extends HttpClient<R> {
+class HttpClientImpl<R extends RequestEngineBuilder<?>> extends HttpClient<R> {
   private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientImpl.class);
 
   static final Set<String> PASS_THROUGH_HEADERS = of(X_REQUEST_ID, X_REAL_IP, AUTHORIZATION, HH_PROTO_SESSION,
