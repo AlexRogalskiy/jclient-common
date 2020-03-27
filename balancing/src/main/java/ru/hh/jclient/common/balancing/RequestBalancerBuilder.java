@@ -5,12 +5,12 @@ import ru.hh.jclient.common.Request;
 import ru.hh.jclient.common.RequestEngineBuilder;
 import ru.hh.jclient.common.RequestStrategy;
 
-public class RequestBalancerBuilder implements RequestEngineBuilder {
+public class RequestBalancerBuilder implements RequestEngineBuilder<RequestBalancerBuilder> {
 
   private final UpstreamManager upstreamManager;
-  private final HttpClient httpClient;
+  private final HttpClient<RequestBalancerBuilder> httpClient;
 
-  RequestBalancerBuilder(UpstreamManager upstreamManager, HttpClient httpClient) {
+  RequestBalancerBuilder(UpstreamManager upstreamManager, HttpClient<RequestBalancerBuilder> httpClient) {
     this.upstreamManager = upstreamManager;
     this.httpClient = httpClient;
   }
@@ -26,7 +26,7 @@ public class RequestBalancerBuilder implements RequestEngineBuilder {
   }
 
   @Override
-  public HttpClient backToClient() {
+  public HttpClient<RequestBalancerBuilder> backToClient() {
     return httpClient;
   }
 

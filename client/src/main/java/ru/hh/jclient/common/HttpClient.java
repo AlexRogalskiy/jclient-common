@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public abstract class HttpClient {
+public abstract class HttpClient<R extends RequestEngineBuilder<R>> {
   public static final Range<Integer> OK_RANGE = Range.atMost(399);
   public static final Function<Response, Boolean> OK_RESPONSE = r -> OK_RANGE.contains(r.getStatusCode());
 
@@ -44,7 +44,7 @@ public abstract class HttpClient {
   private final Set<String> hostsWithSession;
   private final HttpClientContext context;
   private final Storages storages;
-  private final RequestEngineBuilder requestEngineBuilder;
+  private final R requestEngineBuilder;
   private final List<HttpClientEventListener> eventListeners;
 
   private List<RequestDebug> debugs;
@@ -60,7 +60,7 @@ public abstract class HttpClient {
   HttpClient(AsyncHttpClient http,
              Request request,
              Set<String> hostsWithSession,
-             RequestStrategy<? extends RequestEngineBuilder> requestStrategy,
+             RequestStrategy<R> requestStrategy,
              Storage<HttpClientContext> contextSupplier,
              List<HttpClientEventListener> eventListeners) {
     this.http = http;
@@ -77,7 +77,7 @@ public abstract class HttpClient {
   /**
    * Marks request as "read only". Adds corresponding GET attribute to request url.
    */
-  public HttpClient readOnly() {
+  public HttpClient<R> readOnly() {
     readOnlyReplica = true;
     return this;
   }
@@ -85,7 +85,7 @@ public abstract class HttpClient {
   /**
    * Forces client NOT to send {@link HttpHeaderNames#HH_PROTO_SESSION} header.
    */
-  public HttpClient noSession() {
+  public HttpClient<R> noSession() {
     noSession = true;
     return this;
   }
@@ -93,7 +93,7 @@ public abstract class HttpClient {
   /**
    * Tells client the request will be performed to external resource. Client will not pass-through any of {@link HttpClientImpl#PASS_THROUGH_HEADERS}.
    */
-  public HttpClient external() {
+  public HttpClient<R> external() {
     externalRequest = true;
     return this;
   }
@@ -101,7 +101,7 @@ public abstract class HttpClient {
   /**
    * Forces client NOT to send {@link HttpHeaderNames#X_HH_DEBUG} header.
    */
-  public HttpClient noDebug() {
+  public HttpClient<R> noDebug() {
     noDebug = true;
     return this;
   }
@@ -113,7 +113,7 @@ public abstract class HttpClient {
    * @param body
    *          protobuf object to send in request
    */
-  public HttpClient withProtobufBody(MessageLite body) {
+  public HttpClient<R> withProtobufBody(MessageLite body) {
     requestBodyEntity = Optional.of(requireNonNull(body, "body must not be null"));
     RequestBuilder builder = new RequestBuilder(request);
     builder.setBody(body.toByteArray(), "application/x-protobuf");
@@ -128,7 +128,7 @@ public abstract class HttpClient {
    * @param body
    *          java object to send in request
    */
-  public HttpClient withJavaObjectBody(Object body) {
+  public HttpClient<R> withJavaObjectBody(Object body) {
     requestBodyEntity = Optional.of(requireNonNull(body, "body must not be null"));
     RequestBuilder builder = new RequestBuilder(request);
     try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -287,11 +287,10 @@ public abstract class HttpClient {
 
   /**
    * Entrypoint to configure engine-specific properties of the client
-   * @param clazz specific implementation type of {@link RequestEngineBuilder}
    * @return requestEngineBuilder casted to specific type
    */
-  public <T extends RequestEngineBuilder> T configureRequestEngine(Class<T> clazz) {
-    return (T) requestEngineBuilder;
+  public R configureRequestEngine() {
+    return requestEngineBuilder;
   }
 
   /**

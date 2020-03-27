@@ -2,38 +2,36 @@ package ru.hh.jclient.common;
 
 import java.util.function.UnaryOperator;
 
-public abstract class ConfigurableJClientBase<T extends ConfigurableJClientBase<T>> extends JClientBase {
+public abstract class ConfigurableJClientBase<R extends RequestEngineBuilder<R>, T extends ConfigurableJClientBase<R, T>> extends JClientBase<R> {
 
-  private final HttpClientFactory http;
+  private final HttpClientFactory<R> http;
 
-  public ConfigurableJClientBase(String host, HttpClientFactory http) {
+  public ConfigurableJClientBase(String host, HttpClientFactory<R> http) {
     super(host, http);
     this.http = super.http;
   }
 
-  public ConfigurableJClientBase(String host, String path, HttpClientFactory http) {
+  public ConfigurableJClientBase(String host, String path, HttpClientFactory<R> http) {
     super(host, path, http);
     this.http = super.http;
   }
 
-  protected HttpClientFactory getHttp() {
+  protected HttpClientFactory<R> getHttp() {
     return this.http;
   }
 
   /**
    * method to get NEW preconfigured instance of the client
-   * @param engineBuilderClass class of {@link RequestEngineBuilder} which is currently used in client
-   * @param <REB> type definition of {@link RequestEngineBuilder} specific subtype
    * @param configurator configurationAction to apply to engineBuilder instance *before* passing into {@link HttpClient} instance
    * @return copy of the client with preconfigured engine
    * @throws IllegalStateException if copy is the same instance or has the same {@link HttpClientFactory} instance
    */
-  public <REB extends RequestEngineBuilder> T withPreconfiguredEngine(Class<REB> engineBuilderClass, UnaryOperator<REB> configurator) {
+  public T withPreconfiguredEngine(UnaryOperator<R> configurator) {
     T copy;
     try {
-      copy = createCustomizedCopy(new HttpClientFactoryConfigurator() {
+      copy = createCustomizedCopy(new HttpClientFactoryConfigurator<>() {
         @Override
-        protected UnaryOperator<REB> requestStrategyConfigurator() {
+        protected UnaryOperator<R> requestStrategyConfigurator() {
           return configurator;
         }
       });
@@ -58,5 +56,5 @@ public abstract class ConfigurableJClientBase<T extends ConfigurableJClientBase<
    * All manipulations with builder from {@link HttpClient} instance have priority over configurator
    * @return NEW instance of the same type as this, but with customized {@link HttpClientFactory}
    */
-  protected abstract T createCustomizedCopy(HttpClientFactoryConfigurator configurator) throws Exception;
+  protected abstract T createCustomizedCopy(HttpClientFactoryConfigurator<R> configurator) throws Exception;
 }

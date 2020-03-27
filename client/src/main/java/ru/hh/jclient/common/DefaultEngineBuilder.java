@@ -1,9 +1,9 @@
 package ru.hh.jclient.common;
 
-public class DefaultEngineBuilder implements RequestEngineBuilder {
-  private final HttpClient httpClient;
+public class DefaultEngineBuilder implements RequestEngineBuilder<DefaultEngineBuilder> {
+  private final HttpClient<DefaultEngineBuilder> httpClient;
 
-  public DefaultEngineBuilder(HttpClient httpClient) {
+  public DefaultEngineBuilder(HttpClient<DefaultEngineBuilder> httpClient) {
     this.httpClient = httpClient;
   }
 
@@ -14,7 +14,7 @@ public class DefaultEngineBuilder implements RequestEngineBuilder {
   }
 
   @Override
-  public HttpClient backToClient() {
+  public HttpClient<DefaultEngineBuilder> backToClient() {
     return httpClient;
   }
 }

@@ -33,10 +33,10 @@ import ru.hh.jclient.common.util.storage.SingletonStorage;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 
-public class HttpClientTestBase {
+public class HttpClientTestBase<R extends RequestEngineBuilder<R>> {
 
   static AsyncHttpClientConfig httpClientConfig = new DefaultAsyncHttpClientConfig.Builder().build();
-  public static HttpClientFactory http;
+  private static HttpClientFactory<?> http;
   static HttpClientContext httpClientContext;
   static TestRequestDebug debug = new TestRequestDebug(true);
   static List<Supplier<RequestDebug>> debugs = List.of(() -> debug);
@@ -171,22 +171,34 @@ public class HttpClientTestBase {
     return completedFuture(new EmptyOrErrorWithStatus<>(of(error), status));
   }
 
-  public HttpClientTestBase withNoListeners() {
+  public HttpClientTestBase<R> withNoListeners() {
     eventListeners = List.of();
     return this;
   }
 
-  public HttpClientTestBase withEventListener(HttpClientEventListener listener) {
+  public HttpClientTestBase<R> withEventListener(HttpClientEventListener listener) {
     eventListeners = List.of(listener);
     return this;
   }
 
-  HttpClientFactory createHttpClientBuilder(AsyncHttpClient httpClient) {
-    return new HttpClientFactory(httpClient, singleton("http://localhost"),
+  HttpClientFactory<R> createHttpClientBuilder(AsyncHttpClient httpClient) {
+    return new HttpClientFactory<>(httpClient, singleton("http://localhost"),
         new SingletonStorage<>(() -> httpClientContext),
         Runnable::run,
-        new DefaultRequestStrategy(),
+        createRequestStrategy(),
         eventListeners
     );
+  }
+
+  RequestStrategy<R> createRequestStrategy() {
+    return (RequestStrategy<R>) new DefaultRequestStrategy();
+  }
+
+  public void setHttpClientFactory(HttpClientFactory<R> http) {
+    HttpClientTestBase.http = http;
+  }
+
+  public HttpClientFactory<R> getHttp() {
+    return (HttpClientFactory<R>) http;
   }
 }

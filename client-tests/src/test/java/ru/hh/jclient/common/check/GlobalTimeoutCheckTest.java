@@ -1,6 +1,7 @@
 package ru.hh.jclient.common.check;
 
 import org.junit.Test;
+import ru.hh.jclient.common.DefaultEngineBuilder;
 import ru.hh.jclient.common.HttpClientTestBase;
 import ru.hh.jclient.common.HttpHeaderNames;
 import ru.hh.jclient.common.Request;
@@ -20,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
-public class GlobalTimeoutCheckTest extends HttpClientTestBase {
+public class GlobalTimeoutCheckTest extends HttpClientTestBase<DefaultEngineBuilder> {
 
   private static final Duration DEFAULT_DURATION = Duration.ofMillis(100);
 
@@ -42,7 +43,7 @@ public class GlobalTimeoutCheckTest extends HttpClientTestBase {
       })
       .okRequest(new byte[0], ANY_TYPE);
     Request request = new RequestBuilder("GET").setUrl("http://localhost/empty").setRequestTimeout(50).build();
-    http.with(request).expectNoContent().result().get();
+    getHttp().with(request).expectNoContent().result().get();
   }
 
   @Test
@@ -64,7 +65,7 @@ public class GlobalTimeoutCheckTest extends HttpClientTestBase {
         })
         .okRequest(new byte[0], ANY_TYPE);
     Request request = new RequestBuilder("GET").setUrl("http://localhost/empty").setRequestTimeout(250).build();
-    http.with(request).expectNoContent().result().get();
+    getHttp().with(request).expectNoContent().result().get();
     assertTrue(GlobalTimeoutCheck.class + " not triggered", triggered.get());
   }
 
@@ -87,7 +88,7 @@ public class GlobalTimeoutCheckTest extends HttpClientTestBase {
         })
         .okRequest(new byte[0], ANY_TYPE);
     Request request = new RequestBuilder("GET").setUrl("http://localhost/empty").setRequestTimeout(50).build();
-    http.with(request).expectNoContent().result().get();
+    getHttp().with(request).expectNoContent().result().get();
     assertTrue(GlobalTimeoutCheck.class + " not triggered", triggered.get());
   }
 
@@ -109,6 +110,6 @@ public class GlobalTimeoutCheckTest extends HttpClientTestBase {
         })
         .okRequest(new byte[0], ANY_TYPE);
     Request request = new RequestBuilder("GET").setUrl("http://localhost/empty").setRequestTimeout(100).build();
-    http.with(request).expectNoContent().result().get();
+    getHttp().with(request).expectNoContent().result().get();
   }
 }

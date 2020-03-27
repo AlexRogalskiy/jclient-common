@@ -152,7 +152,7 @@ public final class HttpClientFactoryBuilder {
     return MDCCopy.doWithoutContext(() -> new DefaultAsyncHttpClient(clientConfig));
   }
 
-  private RequestStrategy<? extends RequestEngineBuilder> initStrategy() {
+  private RequestStrategy<? extends RequestEngineBuilder<?>> initStrategy() {
     requestStrategy.setTimeoutMultiplier(timeoutMultiplier);
     return requestStrategy;
   }

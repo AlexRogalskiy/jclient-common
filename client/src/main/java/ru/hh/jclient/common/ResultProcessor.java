@@ -21,15 +21,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ResultProcessor<T> {
 
-  private HttpClient httpClient;
+  private HttpClient<?> httpClient;
   private TypeConverter<T> converter;
 
-  ResultProcessor(HttpClient httpClient, TypeConverter<T> converter) {
+  ResultProcessor(HttpClient<?> httpClient, TypeConverter<T> converter) {
     this.httpClient = requireNonNull(httpClient, "http client must not be null");
     this.converter = requireNonNull(converter, "converter must not be null");
   }
 
-  HttpClient getHttpClient() {
+  HttpClient<?> getHttpClient() {
     return httpClient;
   }
 

@@ -17,7 +17,7 @@ import ru.hh.jclient.common.responseconverter.XmlConverter;
 
 public class EmptyResultProcessor extends ResultProcessor<Void> {
 
-  EmptyResultProcessor(HttpClient httpClient, TypeConverter<Void> converter) {
+  EmptyResultProcessor(HttpClient<?> httpClient, TypeConverter<Void> converter) {
     super(httpClient, converter);
   }
 

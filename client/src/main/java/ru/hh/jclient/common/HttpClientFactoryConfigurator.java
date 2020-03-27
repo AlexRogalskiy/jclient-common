@@ -2,12 +2,12 @@ package ru.hh.jclient.common;
 
 import java.util.function.UnaryOperator;
 
-public class HttpClientFactoryConfigurator {
-  protected UnaryOperator<? extends RequestEngineBuilder> requestStrategyConfigurator() {
+public class HttpClientFactoryConfigurator<R extends RequestEngineBuilder<R>> {
+  protected UnaryOperator<R> requestStrategyConfigurator() {
     return UnaryOperator.identity();
   }
 
-  public HttpClientFactory configure(HttpClientFactory factory) {
+  public HttpClientFactory<R> configure(HttpClientFactory<R> factory) {
     return factory.createCustomizedCopy(requestStrategyConfigurator());
   }
 }

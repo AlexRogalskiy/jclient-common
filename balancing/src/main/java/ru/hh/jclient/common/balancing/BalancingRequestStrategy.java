@@ -20,7 +20,7 @@ public class BalancingRequestStrategy implements RequestStrategy<RequestBalancer
   }
 
   @Override
-  public RequestBalancerBuilder createRequestEngineBuilder(HttpClient client) {
+  public RequestBalancerBuilder createRequestEngineBuilder(HttpClient<RequestBalancerBuilder> client) {
     var builder = new RequestBalancerBuilder(upstreamManager, client);
     return configAction.apply(builder);
   }
