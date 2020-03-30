@@ -256,16 +256,20 @@ abstract class BalancingClientTestBase extends HttpClientTestBase {
   }
 
   void createHttpClientFactory(String upstreamConfig) {
-    http = createHttpClientFactory(httpClient, singletonMap(TEST_UPSTREAM, upstreamConfig), null, false);
+    http = createHttpClientFactory(httpClient, singletonMap(TEST_UPSTREAM, upstreamConfig), null, false, null);
   }
 
   void createHttpClientFactory(String upstreamConfig, String datacenter, boolean allowCrossDCRequests) {
-    http = createHttpClientFactory(httpClient, singletonMap(TEST_UPSTREAM, upstreamConfig), datacenter, allowCrossDCRequests);
+    http = createHttpClientFactory(httpClient, singletonMap(TEST_UPSTREAM, upstreamConfig), datacenter, allowCrossDCRequests, null);
+  }
+
+  void createHttpClientFactory(Map<String, String> upstreamConfigs, String datacenter, boolean allowCrossDCRequests, String profile) {
+    http = createHttpClientFactory(httpClient, upstreamConfigs, datacenter, allowCrossDCRequests, profile);
   }
 
   void createHttpClientFactory(Map<String, String> upstreamConfigs, String datacenter,
                                boolean allowCrossDCRequests) {
-    http = createHttpClientFactory(httpClient, upstreamConfigs, datacenter, allowCrossDCRequests);
+    http = createHttpClientFactory(httpClient, upstreamConfigs, datacenter, allowCrossDCRequests, null);
   }
 
   Request completeWith(int status, InvocationOnMock iom) throws Exception {
@@ -287,13 +291,28 @@ abstract class BalancingClientTestBase extends HttpClientTestBase {
     assertEquals(request.getRequestTimeout(), (int) timeoutMs);
   }
 
-  private HttpClientFactory createHttpClientFactory(AsyncHttpClient httpClient, Map<String, String> upstreamConfigs, String datacenter,
-                                                    boolean allowCrossDCRequests) {
-    Monitoring monitoring = mock(Monitoring.class);
-    requestingStrategy = new BalancingRequestStrategy(new BalancingUpstreamManager(
-      upstreamConfigs, newSingleThreadScheduledExecutor(), Set.of(monitoring), datacenter, allowCrossDCRequests));
+  private HttpClientFactory createHttpClientFactory(
+      AsyncHttpClient httpClient,
+      Map<String, String> upstreamConfigs,
+      String datacenter,
+      boolean allowCrossDCRequests,
+      String profile
+  ) {
+    var monitoring = mock(Monitoring.class);
+    var upstreamManager = new BalancingUpstreamManager(
+        upstreamConfigs, newSingleThreadScheduledExecutor(), Set.of(monitoring), datacenter, allowCrossDCRequests
+    );
+    requestingStrategy = new BalancingRequestStrategy(upstreamManager);
+    var requestBalancerBuilder = new RequestBalancerBuilder(upstreamManager);
+    if (isAdaptive()) {
+      requestBalancerBuilder = requestBalancerBuilder.makeAdaptive();
+    }
+    if (profile != null) {
+      requestBalancerBuilder = requestBalancerBuilder.withProfile(profile);
+    }
+
     return new HttpClientFactory(httpClient, singleton("http://" + TEST_UPSTREAM),
-        new SingletonStorage<>(() -> httpClientContext), Runnable::run, requestingStrategy);
+        new SingletonStorage<>(() -> httpClientContext), Runnable::run, requestBalancerBuilder);
   }
 
   Request failWith(Throwable t, InvocationOnMock iom) {
@@ -362,76 +381,27 @@ abstract class BalancingClientTestBase extends HttpClientTestBase {
   }
 
   TestClient getTestClient() {
-    return new TestClient(http, isAdaptive());
+    return new TestClient(http);
   }
 
-  static class TestClient extends ConfigurableJClientBase<TestClient> {
-    private final boolean adaptive;
-
-    TestClient(HttpClientFactory http, boolean adaptive) {
+  static class TestClient extends JClientBase {
+    TestClient(HttpClientFactory http) {
       super("http://" + TEST_UPSTREAM, http);
-      this.adaptive = adaptive;
     }
 
     void get() throws Exception {
       ru.hh.jclient.common.Request request = super.get(url("/get")).build();
-      HttpClient client = getHttp().with(request);
-      if (adaptive) {
-        client = client.configureRequestEngine(RequestBalancerBuilder.class).makeAdaptive().backToClient();
-      }
-      client.expectPlainText().result().get();
+      http.with(request).expectPlainText().result().get();
     }
 
     void post() throws Exception {
       ru.hh.jclient.common.Request request = post(url("/post")).build();
-      HttpClient client = getHttp().with(request);
-      if (adaptive) {
-        client = client.configureRequestEngine(RequestBalancerBuilder.class).makeAdaptive().backToClient();
-      }
-      client.expectPlainText().result().get();
+      http.with(request).expectPlainText().result().get();
     }
 
     void get(String url) throws Exception {
       ru.hh.jclient.common.Request request = super.get(url).build();
-      HttpClient client = getHttp().with(request);
-      if (adaptive) {
-        client = client.configureRequestEngine(RequestBalancerBuilder.class).makeAdaptive().backToClient();
-      }
-      client.expectPlainText().result().get();
-    }
-
-    void getWrongEngineBuilderClass() throws Exception {
-      ru.hh.jclient.common.Request request = super.get(url("/get")).build();
-      HttpClient client = getHttp().with(request).configureRequestEngine(NotValidEngineBuilder.class).withSmth().backToClient();
-      client.expectPlainText().result().get();
-    }
-
-    void getWithProfileInsideClient(String profile) throws Exception {
-      ru.hh.jclient.common.Request request = super.get(url("/get")).build();
-      HttpClient client = getHttp().with(request).configureRequestEngine(RequestBalancerBuilder.class).withProfile(profile).backToClient();
-      client.expectPlainText().result().get();
-    }
-
-    @Override
-    protected TestClient createCustomizedCopy(HttpClientFactoryConfigurator configurator) {
-      return new TestClient(configurator.configure(getHttp()), adaptive);
-    }
-  }
-
-  static final class NotValidEngineBuilder implements RequestEngineBuilder {
-
-    @Override
-    public RequestEngine build(ru.hh.jclient.common.Request request, RequestStrategy.RequestExecutor executor) {
-      return null;
-    }
-
-    public NotValidEngineBuilder withSmth() {
-      return this;
-    }
-
-    @Override
-    public HttpClient backToClient() {
-      return null;
+      http.with(request).expectPlainText().result().get();
     }
   }
 }

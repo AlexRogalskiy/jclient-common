@@ -1,6 +1,5 @@
 package ru.hh.jclient.common.balancing;
 
-import ru.hh.jclient.common.HttpClient;
 import ru.hh.jclient.common.RequestStrategy;
 
 import java.util.function.UnaryOperator;
@@ -20,8 +19,8 @@ public class BalancingRequestStrategy implements RequestStrategy<RequestBalancer
   }
 
   @Override
-  public RequestBalancerBuilder createRequestEngineBuilder(HttpClient client) {
-    var builder = new RequestBalancerBuilder(upstreamManager, client);
+  public RequestBalancerBuilder createRequestEngineBuilder() {
+    var builder = new RequestBalancerBuilder(upstreamManager);
     return configAction.apply(builder);
   }
 

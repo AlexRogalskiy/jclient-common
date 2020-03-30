@@ -3,7 +3,6 @@ package ru.hh.jclient.common;
 import org.asynchttpclient.Request;
 import org.junit.Test;
 import ru.hh.jclient.common.HttpClientImpl.CompletionHandler;
-import ru.hh.jclient.common.balancing.RequestBalancerBuilder;
 import ru.hh.jclient.common.balancing.Upstream.UpstreamKey;
 
 import java.util.List;
@@ -42,11 +41,17 @@ public class BalancingClientTest extends BalancingClientTestBase {
         });
     getTestClient().get();
     assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(3));
-    getTestClient().withPreconfiguredEngine(RequestBalancerBuilder.class, builder -> builder.withProfile("foo")).get();
+
+    createHttpClientFactory(upstreamConfigs, null, false, "foo");
+    getTestClient().get();
     assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(2));
-    getTestClient().withPreconfiguredEngine(RequestBalancerBuilder.class, builder -> builder.withProfile("foo")).getWithProfileInsideClient("bar");
+
+    createHttpClientFactory(upstreamConfigs, null, false, "bar");
+    getTestClient().get();
     assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(1));
-    getTestClient().withPreconfiguredEngine(RequestBalancerBuilder.class, builder -> builder.withProfile("not existing profile")).get();
+
+    createHttpClientFactory(upstreamConfigs, null, false, "not existing profile");
+    getTestClient().get();
     assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(3));
   }
 
@@ -66,40 +71,6 @@ public class BalancingClientTest extends BalancingClientTestBase {
               return null;
             });
     getTestClient().get();
-  }
-
-  @Test(expected = ClassCastException.class)
-  public void preconfiguredWithWrongClass() throws Exception {
-    var upstreamConfigs = Map.of(
-            UpstreamKey.ofComplexName(TEST_UPSTREAM).getWholeName(),
-            "request_timeout_sec=2 | server=http://server1 | server=http://server2"
-    );
-    createHttpClientFactory(upstreamConfigs, null, false);
-    Request[] request = new Request[1];
-    when(httpClient.executeRequest(isA(Request.class), isA(CompletionHandler.class)))
-            .then(iom -> {
-              request[0] = completeWith(200, iom);
-              return null;
-            });
-    getTestClient().withPreconfiguredEngine(NotValidEngineBuilder.class, NotValidEngineBuilder::withSmth).get();
-    assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(2));
-  }
-
-  @Test(expected = ClassCastException.class)
-  public void configuredWithWrongClass() throws Exception {
-    var upstreamConfigs = Map.of(
-            UpstreamKey.ofComplexName(TEST_UPSTREAM).getWholeName(),
-            "request_timeout_sec=2 | server=http://server1 | server=http://server2"
-    );
-    createHttpClientFactory(upstreamConfigs, null, false);
-    Request[] request = new Request[1];
-    when(httpClient.executeRequest(isA(Request.class), isA(CompletionHandler.class)))
-            .then(iom -> {
-              request[0] = completeWith(200, iom);
-              return null;
-            });
-    getTestClient().getWrongEngineBuilderClass();
-    assertRequestTimeoutEquals(request[0], TimeUnit.SECONDS.toMillis(2));
   }
 
   @Test

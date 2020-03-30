@@ -45,11 +45,11 @@ class HttpClientImpl extends HttpClient {
   HttpClientImpl(AsyncHttpClient http,
                  Request request,
                  Set<String> hostsWithSession,
-                 RequestStrategy<? extends RequestEngineBuilder> requestStrategy,
+                 RequestEngineBuilder requestEngineBuilder,
                  Storage<HttpClientContext> contextSupplier,
                  Executor callbackExecutor,
                  List<HttpClientEventListener> eventListeners) {
-    super(http, request, hostsWithSession, requestStrategy, contextSupplier, eventListeners);
+    super(http, request, hostsWithSession, requestEngineBuilder, contextSupplier, eventListeners);
     this.callbackExecutor = callbackExecutor;
   }
 

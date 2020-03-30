@@ -3,13 +3,9 @@ package ru.hh.jclient.common;
 import java.util.function.UnaryOperator;
 
 public class DefaultRequestStrategy implements RequestStrategy<RequestEngineBuilder> {
-
-  public DefaultRequestStrategy() {
-  }
-
   @Override
-  public RequestEngineBuilder createRequestEngineBuilder(HttpClient client) {
-    return new DefaultEngineBuilder(client);
+  public RequestEngineBuilder createRequestEngineBuilder() {
+    return new DefaultEngineBuilder();
   }
 
   @Override

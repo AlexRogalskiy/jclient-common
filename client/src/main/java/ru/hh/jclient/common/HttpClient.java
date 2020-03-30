@@ -60,13 +60,13 @@ public abstract class HttpClient {
   HttpClient(AsyncHttpClient http,
              Request request,
              Set<String> hostsWithSession,
-             RequestStrategy<? extends RequestEngineBuilder> requestStrategy,
+             RequestEngineBuilder requestEngineBuilder,
              Storage<HttpClientContext> contextSupplier,
              List<HttpClientEventListener> eventListeners) {
     this.http = http;
     this.request = request;
     this.hostsWithSession = hostsWithSession;
-    this.requestEngineBuilder = requestStrategy.createRequestEngineBuilder(this);
+    this.requestEngineBuilder = requestEngineBuilder;
     this.eventListeners = eventListeners;
 
     context = contextSupplier.get();

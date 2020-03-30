@@ -9,7 +9,7 @@ public interface RequestStrategy<REB extends RequestEngineBuilder> {
   interface RequestExecutor {
     CompletableFuture<ResponseWrapper> executeRequest(Request request, int retryCount, RequestContext context);
   }
-  REB createRequestEngineBuilder(HttpClient client);
+  REB createRequestEngineBuilder();
   void setTimeoutMultiplier(double timeoutMultiplier);
   RequestStrategy<REB> createCustomizedCopy(UnaryOperator<REB> configAction);
 }

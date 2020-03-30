@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
-import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 
@@ -19,7 +18,7 @@ public class HttpClientFactory {
   private final Set<String> hostsWithSession;
   private final Storage<HttpClientContext> contextSupplier;
   private final Executor callbackExecutor;
-  private final RequestStrategy<?> requestStrategy;
+  private final RequestEngineBuilder requestEngineBuilder;
   private final List<HttpClientEventListener> eventListeners;
 
   public HttpClientFactory(AsyncHttpClient http, Set<String> hostsWithSession, Storage<HttpClientContext> contextSupplier) {
@@ -38,20 +37,28 @@ public class HttpClientFactory {
                            Storage<HttpClientContext> contextSupplier,
                            Executor callbackExecutor,
                            RequestStrategy<?> requestStrategy) {
-    this(http, hostsWithSession, contextSupplier, callbackExecutor, requestStrategy, List.of());
+    this(http, hostsWithSession, contextSupplier, callbackExecutor, requestStrategy.createRequestEngineBuilder(), List.of());
   }
 
   public HttpClientFactory(AsyncHttpClient http,
                            Set<String> hostsWithSession,
                            Storage<HttpClientContext> contextSupplier,
                            Executor callbackExecutor,
-                           RequestStrategy<?> requestStrategy,
+                           RequestEngineBuilder requestEngineBuilder) {
+    this(http, hostsWithSession, contextSupplier, callbackExecutor, requestEngineBuilder, List.of());
+  }
+
+  public HttpClientFactory(AsyncHttpClient http,
+                           Set<String> hostsWithSession,
+                           Storage<HttpClientContext> contextSupplier,
+                           Executor callbackExecutor,
+                           RequestEngineBuilder requestEngineBuilder,
                            List<HttpClientEventListener> eventListeners) {
     this.http = requireNonNull(http, "http must not be null");
     this.hostsWithSession = requireNonNull(hostsWithSession, "hostsWithSession must not be null");
     this.contextSupplier = requireNonNull(contextSupplier, "contextSupplier must not be null");
     this.callbackExecutor = requireNonNull(callbackExecutor, "callbackExecutor must not be null");
-    this.requestStrategy = requireNonNull(requestStrategy, "upstreamManager must not be null");
+    this.requestEngineBuilder = requireNonNull(requestEngineBuilder, "requestEngineBuilder must not be null");
     this.eventListeners = eventListeners;
   }
 
@@ -66,7 +73,24 @@ public class HttpClientFactory {
         http,
         requireNonNull(request, "request must not be null"),
         hostsWithSession,
-        requestStrategy,
+        requestEngineBuilder,
+        contextSupplier,
+        callbackExecutor,
+      eventListeners);
+  }
+
+  /**
+   * Specifies request to be executed. This is a starting point of request execution chain.
+   *
+   * @param request
+   *          to execute
+   */
+  public HttpClient with(Request request, RequestEngineBuilder requestEngineBuilder) {
+    return new HttpClientImpl(
+        http,
+        requireNonNull(request, "request must not be null"),
+        hostsWithSession,
+        requestEngineBuilder,
         contextSupplier,
         callbackExecutor,
       eventListeners);
@@ -91,18 +115,5 @@ public class HttpClientFactory {
 
   Storage<HttpClientContext> getContextSupplier() {
     return contextSupplier;
-  }
-
-  /**
-   * create customized copy of the factory
-   * @param mapper action to customize {@link RequestStrategy}
-   * @return new instance of httpClientFactory
-   * @throws ClassCastException if strategy type differs from required customization
-   */
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  HttpClientFactory createCustomizedCopy(UnaryOperator<? extends RequestEngineBuilder> mapper) {
-    return new HttpClientFactory(this.http, this.hostsWithSession, this.contextSupplier, this.callbackExecutor,
-                                 this.requestStrategy.createCustomizedCopy((UnaryOperator) mapper),
-                                 this.eventListeners);
   }
 }

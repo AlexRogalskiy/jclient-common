@@ -24,7 +24,8 @@ public final class HttpClientFactoryBuilder {
   public static final double DEFAULT_TIMEOUT_MULTIPLIER = 1;
 
   private DefaultAsyncHttpClientConfig.Builder configBuilder;
-  private RequestStrategy<? extends RequestEngineBuilder> requestStrategy = new DefaultRequestStrategy();
+  private RequestStrategy<? extends RequestEngineBuilder> requestStrategy;
+  private RequestEngineBuilder requestEngineBuilder;
   private Executor callbackExecutor;
   private Set<String> hostsWithSession;
   private Storage<HttpClientContext> contextSupplier;
@@ -36,6 +37,9 @@ public final class HttpClientFactoryBuilder {
     this.configBuilder = new DefaultAsyncHttpClientConfig.Builder();
     this.contextSupplier = contextSupplier;
     this.eventListeners = new ArrayList<>(eventListeners);
+    requestStrategy = new DefaultRequestStrategy();
+    requestStrategy.setTimeoutMultiplier(timeoutMultiplier);
+    this.requestEngineBuilder = requestStrategy.createRequestEngineBuilder();
   }
 
   public HttpClientFactoryBuilder withProperties(Properties properties) {
@@ -91,6 +95,11 @@ public final class HttpClientFactoryBuilder {
     return this;
   }
 
+  public HttpClientFactoryBuilder withRequestEngineBuilder(RequestEngineBuilder requestEngineBuilder) {
+    this.requestEngineBuilder = requestEngineBuilder;
+    return this;
+  }
+
   public HttpClientFactoryBuilder withThreadFactory(ThreadFactory threadFactory) {
     this.configBuilder.setThreadFactory(threadFactory);
     return this;
@@ -132,12 +141,16 @@ public final class HttpClientFactoryBuilder {
   }
 
   public HttpClientFactory build() {
+    return buildWithEngine(initStrategy().createRequestEngineBuilder());
+  }
+
+  public HttpClientFactory buildWithEngine(RequestEngineBuilder requestEngineBuilder) {
     HttpClientFactory httpClientFactory = new HttpClientFactory(
       buildClient(),
       Set.copyOf(hostsWithSession),
       contextSupplier,
       callbackExecutor,
-      initStrategy(),
+      requestEngineBuilder,
       eventListeners
     );
     ofNullable(metricsConsumer).ifPresent(consumer -> consumer.accept(httpClientFactory.getMetricProvider()));
