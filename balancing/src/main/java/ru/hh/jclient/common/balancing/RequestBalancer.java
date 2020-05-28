@@ -147,13 +147,14 @@ public class RequestBalancer implements RequestEngine {
 
   private Request getBalancedRequest(Request request) {
     if (adaptive && !adaptiveFailed) {
-      try {
+      throw new IllegalArgumentException("failed lol");
+      /*try {
         currentServer = acquireAdaptiveServer();
       } catch (RuntimeException e) {
         logger.error("failed to acquire adaptive servers", e);
         adaptiveFailed = true;
         currentServer = upstream.acquireServer(triedServers);
-      }
+      }*/
     } else {
       currentServer = upstream.acquireServer(triedServers);
     }
