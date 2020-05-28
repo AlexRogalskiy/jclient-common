@@ -40,13 +40,13 @@ final class AdaptiveBalancingStrategy {
     for (Server server : servers) {
       healths[i] = server.getDowntimeDetector().successCount();
 
-      ResponseTimeTracker tracker = server.getResponseTimeTracker();
+      var tracker = server.getResponseTimeTracker();
       LOGGER.debug("gathering stats {}, warmUp:{}, time:{}, successCount:{}", server, tracker.isWarmUp(),
           tracker.mean(), server.getDowntimeDetector().successCount());
       if (tracker.isWarmUp()) {
         isAnyWarmingUp = true;
       } else {
-        long mean = tracker.mean();
+        long mean = Math.max(1, tracker.mean());
         scores[i] = mean;
         min = Math.min(min, mean);
         max = Math.max(max, mean);
