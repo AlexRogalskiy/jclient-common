@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ru.hh.jclient.common.HttpStatuses.CONNECT_TIMEOUT_ERROR;
 import static ru.hh.jclient.common.HttpStatuses.SERVICE_UNAVAILABLE;
+import static ru.hh.jclient.common.ResponseStatusMessages.CONNECTION_RESET_MESSAGE;
 import static ru.hh.jclient.common.ResponseStatusMessages.CONNECT_ERROR_MESSAGE;
 import static ru.hh.jclient.common.ResponseStatusMessages.REQUEST_TIMEOUT_MESSAGE;
 
@@ -35,6 +36,8 @@ public class RetryPolicyTest {
     assertTrue(policy.isRetriable(createResponse(CONNECT_TIMEOUT_ERROR, CONNECT_ERROR_MESSAGE), false));
     assertTrue(policy.isRetriable(createResponse(SERVICE_UNAVAILABLE, ""), true));
     assertTrue(policy.isRetriable(createResponse(SERVICE_UNAVAILABLE, ""), false));
+//    assertTrue(policy.isRetriable(createResponse(CONNECT_TIMEOUT_ERROR, CONNECTION_RESET_MESSAGE), true));
+//    assertTrue(policy.isRetriable(createResponse(CONNECT_TIMEOUT_ERROR, CONNECTION_RESET_MESSAGE), false));
     assertFalse(policy.isRetriable(createResponse(CONNECT_TIMEOUT_ERROR, REQUEST_TIMEOUT_MESSAGE), true));
     assertFalse(policy.isRetriable(createResponse(CONNECT_TIMEOUT_ERROR, REQUEST_TIMEOUT_MESSAGE), false));
   }

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import static ru.hh.jclient.common.HttpStatuses.CONNECT_TIMEOUT_ERROR;
 import static ru.hh.jclient.common.HttpStatuses.SERVICE_UNAVAILABLE;
+import static ru.hh.jclient.common.ResponseStatusMessages.CONNECTION_RESET_MESSAGE;
 import static ru.hh.jclient.common.ResponseStatusMessages.CONNECT_ERROR_MESSAGE;
 
 
@@ -51,10 +52,13 @@ final class RetryPolicy {
 
   boolean isRetriable(Response response, boolean idempotent) {
     int statusCode = response.getStatusCode();
-
     if (statusCode == CONNECT_TIMEOUT_ERROR && CONNECT_ERROR_MESSAGE.equals(response.getStatusText())) {
       return true;
     }
+
+//    if (statusCode == CONNECT_TIMEOUT_ERROR && CONNECTION_RESET_MESSAGE.equals(response.getStatusText())) {
+//      return idempotent;
+//    }
 
     Boolean retryNonIdempotent = rules.get(statusCode);
     if (retryNonIdempotent == null) {

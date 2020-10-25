@@ -41,6 +41,7 @@ public class HttpClientTestBase {
   protected AsyncHttpClientConfig httpClientConfig = defaultHttpClientConfig;
   protected HttpClientFactory http;
   protected HttpClientContext httpClientContext;
+  protected RequestStrategy<?> strategy = new DefaultRequestStrategy();
   protected TestRequestDebug debug = new TestRequestDebug(true);
   protected List<Supplier<RequestDebug>> debugs = List.of(() -> debug);
   protected List<HttpClientEventListener> eventListeners = new ArrayList<>();
@@ -193,7 +194,7 @@ public class HttpClientTestBase {
     return new HttpClientFactory(httpClient, singleton("http://localhost"),
         new SingletonStorage<>(() -> httpClientContext),
         Runnable::run,
-        new DefaultRequestStrategy(),
+        strategy,
         eventListeners
     );
   }
