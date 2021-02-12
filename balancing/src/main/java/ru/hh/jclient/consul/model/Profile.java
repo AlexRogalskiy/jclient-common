@@ -13,6 +13,8 @@ public class Profile {
   private Float connectTimeoutMs;
   @JsonProperty("request_timeout_sec")
   private Float requestTimeoutMs;
+  @JsonProperty("slow_start_interval_sec")
+  private Integer slowStartIntervalSec;
   @JsonProperty("retry_policy")
   private Map<Integer, RetryPolicyConfig> retryPolicy;
 
@@ -59,6 +61,14 @@ public class Profile {
   public Profile setRequestTimeoutMs(Float requestTimeoutMs) {
     this.requestTimeoutMs = requestTimeoutMs;
     return this;
+  }
+
+  public Integer getSlowStartIntervalSec() {
+    return slowStartIntervalSec;
+  }
+
+  public void setSlowStartIntervalSec(Integer slowStartIntervalSec) {
+    this.slowStartIntervalSec = slowStartIntervalSec;
   }
 
   @Override

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static ru.hh.jclient.common.balancing.AdaptiveBalancingStrategy.DOWNTIME_DETECTOR_WINDOW;
 import static ru.hh.jclient.common.balancing.AdaptiveBalancingStrategy.RESPONSE_TIME_TRACKER_WINDOW;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,9 @@ public final class Server {
   private volatile int weight;
   private volatile Map<String, String> meta;
   private volatile List<String> tags;
+  //no matter if concurrently consistent
+  private boolean warmupEnded;
+  private long warmupEndNanos;
 
   private volatile int requests = 0;
   private volatile int fails = 0;
@@ -134,5 +138,22 @@ public final class Server {
       ", fails=" + fails +
       ", statsRequests=" + statsRequests +
       '}';
+  }
+
+  public boolean isWarmupEnded() {
+    if (!warmupEnded && System.nanoTime() > warmupEndNanos) {
+      warmupEnded = true;
+    }
+    return warmupEnded;
+  }
+
+  public void setWarmupEnded(boolean warmupEnded) {
+    this.warmupEnded = warmupEnded;
+  }
+
+  public void setWarmupEndNanosIfNeeded(int slowStartSeconds) {
+    if (!warmupEnded && slowStartSeconds > 0) {
+      this.warmupEndNanos = System.nanoTime() + (long) (Math.random() * Duration.ofSeconds(slowStartSeconds).toNanos());
+    }
   }
 }

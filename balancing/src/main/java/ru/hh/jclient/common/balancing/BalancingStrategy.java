@@ -22,6 +22,9 @@ final class BalancingStrategy {
       if (server == null) {
         continue;
       }
+      if (!server.isWarmupEnded()) {
+        continue;
+      }
 
       boolean isDifferentDC = !Objects.equals(datacenter, server.getDatacenterLowerCased());
 

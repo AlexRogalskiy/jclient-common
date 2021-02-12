@@ -1,11 +1,10 @@
 package ru.hh.jclient.common.balancing;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import static ru.hh.jclient.common.balancing.BalancingStrategy.getLeastLoadedServer;
 
 import javax.annotation.Nullable;
@@ -47,10 +46,15 @@ public class Upstream {
            boolean enabled) {
     this.upstreamKey = upstreamKey;
     this.upstreamConfig = upstreamConfig;
-    this.servers = servers;
+    this.servers = setWarmup(servers, upstreamConfig);
     this.datacenter = datacenter == null ? null : datacenter.toLowerCase();
     this.allowCrossDCRequests = allowCrossDCRequests;
     this.enabled = enabled;
+  }
+
+  private static List<Server> setWarmup(List<Server> servers, UpstreamConfig upstreamConfig) {
+    servers.forEach(server -> server.setWarmupEndNanosIfNeeded(upstreamConfig.getSlowStartIntervalSec()));
+    return servers;
   }
 
   public int getServerCount() {
@@ -160,7 +164,7 @@ public class Upstream {
     configWriteLock.lock();
     try {
       this.upstreamConfig.update(newConfig);
-      this.servers = servers;
+      this.servers = setWarmup(servers, upstreamConfig);
       this.failedSelection = false;
     } finally {
       configWriteLock.unlock();

@@ -21,6 +21,7 @@ public final class UpstreamConfig {
   static final int DEFAULT_CONNECT_TIMEOUT_MS = 200;
   private int maxTries;
   private int maxTimeoutTries;
+  private int slowStartIntervalSec;
 
   private int connectTimeoutMs;
   private int requestTimeoutMs;
@@ -48,6 +49,7 @@ public final class UpstreamConfig {
       upstreamConfig.maxTimeoutTries = requireNonNullElse(profile.getMaxTimeoutTries(), DEFAULT_MAX_TIMEOUT_TRIES);
       upstreamConfig.connectTimeoutMs = convertToMillisOrFallback(profile.getConnectTimeoutMs(), DEFAULT_CONNECT_TIMEOUT_MS);
       upstreamConfig.requestTimeoutMs = convertToMillisOrFallback(profile.getRequestTimeoutMs(), DEFAULT_REQUEST_TIMEOUT_MS);
+      upstreamConfig.slowStartIntervalSec = requireNonNullElse(profile.getSlowStartIntervalSec(), 0);
       upstreamConfig.retryPolicy.update(profile.getRetryPolicy());
 
       return upstreamConfig;
@@ -91,6 +93,10 @@ public final class UpstreamConfig {
 
   public int getRequestTimeoutMs() {
     return requestTimeoutMs;
+  }
+
+  public int getSlowStartIntervalSec() {
+    return slowStartIntervalSec;
   }
 
   public RetryPolicy getRetryPolicy() {
