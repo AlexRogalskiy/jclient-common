@@ -15,14 +15,11 @@ final class BalancingStrategy {
   static int getLeastLoadedServer(List<Server> servers, Set<Integer> excludedServers, String datacenter, boolean allowCrossDCRequests) {
     int minIndex = -1;
     Weight minWeight = null;
-
+    int maxRequests = servers.stream().mapToInt(Server::getStatsRequests).max().orElse(0);
     for (int index = 0; index < servers.size(); index++) {
       Server server = servers.get(index);
 
       if (server == null) {
-        continue;
-      }
-      if (!server.isWarmupEnded()) {
         continue;
       }
 
@@ -32,12 +29,11 @@ final class BalancingStrategy {
         continue;
       }
 
-      float currentLoad = (float) server.getRequests() / server.getWeight();
       float statLoad = (float) server.getStatsRequests() / server.getWeight();
-      Weight weight = new Weight(isDifferentDC, currentLoad, statLoad);
+      Weight weight = new Weight(isDifferentDC, statLoad, !server.tryEndWarmup(maxRequests));
 
-      LOGGER.debug("static balancer stats for {}, differentDC:{}, load:{}, stat_load:{}", server,
-              weight.isDifferentDC(), weight.getCurrentLoad(), weight.getStatLoad());
+      LOGGER.debug("static balancer stats for {}, differentDC:{}, stat_load:{}", server,
+              weight.isDifferentDC(), weight.getStatLoad());
 
       if (!excludedServers.contains(index) && (minIndex < 0 || minWeight.compareTo(weight) > 0)) {
         minIndex = index;
@@ -46,8 +42,8 @@ final class BalancingStrategy {
     }
 
     if (minIndex != -1) {
-      LOGGER.debug("static balancer pick for {}, differentDC:{}, load:{}, stat_load:{}", minIndex,
-              minWeight.isDifferentDC(), minWeight.getCurrentLoad(), minWeight.getStatLoad());
+      LOGGER.debug("static balancer pick for {}, differentDC:{}, stat_load:{}", minIndex,
+              minWeight.isDifferentDC(), minWeight.getStatLoad());
     } else {
       LOGGER.debug("no server available");
     }
@@ -57,30 +53,30 @@ final class BalancingStrategy {
   private BalancingStrategy() {
   }
 
-  private static class Weight implements Comparable<Weight> {
+  private static final class Weight implements Comparable<Weight> {
     private static final Comparator<Weight> weightComparator = Comparator.comparing(Weight::isDifferentDC)
-        .thenComparingDouble(Weight::getCurrentLoad)
-        .thenComparingDouble(Weight::getStatLoad);
+      .thenComparing(Weight::isWarmup)
+      .thenComparingDouble(Weight::getStatLoad);
     private final boolean differentDC;
-    private final float currentLoad;
     private final float statLoad;
+    private final boolean warmup;
 
-    Weight(boolean differentDC, float currentLoad, float statLoad) {
+    Weight(boolean differentDC, float statLoad, boolean warmup) {
       this.differentDC = differentDC;
-      this.currentLoad = currentLoad;
       this.statLoad = statLoad;
+      this.warmup = warmup;
     }
 
     public boolean isDifferentDC() {
       return differentDC;
     }
 
-    public float getCurrentLoad() {
-      return currentLoad;
-    }
-
     public float getStatLoad() {
       return statLoad;
+    }
+
+    public boolean isWarmup() {
+      return warmup;
     }
 
     @Override

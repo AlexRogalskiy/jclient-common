@@ -1,7 +1,6 @@
 package ru.hh.jclient.common.balancing;
 
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
@@ -62,21 +61,6 @@ public class UpstreamTest {
   }
 
   @Test
-  public void acquireExcludedServer() {
-    List<Server> servers = buildServers();
-    Upstream upstream = createTestUpstream(TEST_SERVICE_NAME, servers);
-
-    int excludedServerIndex = 0;
-
-    ServerEntry serverEntry = upstream.acquireServer(singleton(excludedServerIndex));
-
-    assertEquals("b", serverEntry.getAddress());
-
-    assertEquals(0, servers.get(0).getRequests());
-    assertEquals(1, servers.get(1).getRequests());
-  }
-
-  @Test
   public void acquireReleaseServerWithFails() {
     List<Server> servers = List.of(new Server("a", 1, null));
     Upstream upstream = createTestUpstream(TEST_SERVICE_NAME, servers);
@@ -131,7 +115,6 @@ public class UpstreamTest {
 
       thread.join();
 
-      assertEquals("current requests", 0, server.getRequests());
       assertEquals("current fails", 0, server.getFails());
 
       LOGGER.info("finished iteration {} out of {} in {} ms", t, tests, (currentTimeMillis() - start));
@@ -142,7 +125,6 @@ public class UpstreamTest {
 
   private static void assertServerCounters(List<Server> servers, int serverIndex, int requests, int statsRequests, int fails) {
 
-    assertEquals("requests", requests, servers.get(serverIndex).getRequests());
     assertEquals("statsRequests", statsRequests, servers.get(serverIndex).getStatsRequests());
     assertEquals("fails", fails, servers.get(serverIndex).getFails());
   }

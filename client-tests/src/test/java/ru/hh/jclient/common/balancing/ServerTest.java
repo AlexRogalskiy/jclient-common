@@ -9,7 +9,6 @@ public class ServerTest {
   public void testCreateServer() {
     Server server = new Server("test", 1,  "DC1");
 
-    assertEquals(0, server.getRequests());
     assertEquals(0, server.getStatsRequests());
     assertEquals(0, server.getFails());
     assertEquals(1, server.getWeight());
@@ -23,7 +22,6 @@ public class ServerTest {
     server.acquire();
 
     assertEquals(0, server.getFails());
-    assertEquals(1, server.getRequests());
     assertEquals(1, server.getStatsRequests());
   }
 
@@ -35,7 +33,6 @@ public class ServerTest {
     server.release(false);
 
     assertEquals(0, server.getFails());
-    assertEquals(0, server.getRequests());
     assertEquals(1, server.getStatsRequests());
   }
 
@@ -47,7 +44,6 @@ public class ServerTest {
     server.release(true);
 
     assertEquals(1, server.getFails());
-    assertEquals(0, server.getRequests());
     assertEquals(1, server.getStatsRequests());
   }
 

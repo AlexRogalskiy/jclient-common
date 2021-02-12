@@ -20,7 +20,6 @@ public final class Server {
   private boolean warmupEnded;
   private long warmupEndNanos;
 
-  private volatile int requests = 0;
   private volatile int fails = 0;
   private volatile int statsRequests = 0;
 
@@ -41,14 +40,10 @@ public final class Server {
   }
 
   synchronized void acquire() {
-    requests++;
     statsRequests++;
   }
 
   synchronized void release(boolean isError) {
-    if (requests > 0) {
-      requests--;
-    }
     if (isError) {
       fails++;
     } else {
@@ -85,10 +80,6 @@ public final class Server {
     return datacenter == null ? null : datacenter.toLowerCase();
   }
 
-  public int getRequests() {
-    return requests;
-  }
-
   public int getFails() {
     return fails;
   }
@@ -121,9 +112,8 @@ public final class Server {
     this.tags = tags;
   }
 
-  public Server setWeight(int weight) {
+  public void setWeight(int weight) {
     this.weight = weight;
-    return this;
   }
 
   @Override
@@ -134,15 +124,15 @@ public final class Server {
       ", datacenter='" + datacenter + '\'' +
       ", meta=" + meta +
       ", tags=" + tags +
-      ", requests=" + requests +
       ", fails=" + fails +
       ", statsRequests=" + statsRequests +
       '}';
   }
 
-  public boolean isWarmupEnded() {
+  public boolean tryEndWarmup(int statRequestsToSetAfterWarmup) {
     if (!warmupEnded && System.nanoTime() > warmupEndNanos) {
       warmupEnded = true;
+      statsRequests = statRequestsToSetAfterWarmup;
     }
     return warmupEnded;
   }
