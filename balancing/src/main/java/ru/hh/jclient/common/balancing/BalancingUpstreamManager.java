@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import ru.hh.jclient.common.Monitoring;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,7 @@ public BalancingUpstreamManager(ConfigStore configStore,
   }
 
   @Override
-  public Upstream getUpstream(String serviceName) {
+  public Upstream getUpstream(String serviceName, @Nullable String profile) {
     return upstreams.get(getNameWithoutScheme(serviceName));
   }
 
