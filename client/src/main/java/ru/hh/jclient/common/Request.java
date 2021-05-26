@@ -171,6 +171,8 @@ public class Request {
     sb.append(getReadTimeout());
     sb.append("; queryParams:");
     sb.append(getQueryParams());
+    sb.append("; headers:");
+    sb.append(getHeaders());
     return sb.toString();
   }
 
